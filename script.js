@@ -15,11 +15,13 @@ async function updateElonNetWorth() {
         console.log('Fetched data:', data);
         elonNetWorth = data.netWorth || elonNetWorth;
         document.getElementById('elon-net-worth').textContent = `$${formatNumber(elonNetWorth)}`;
+        document.title = `Elon Musk: $${formatNumber(elonNetWorth)} | Net Worth Comparison`; // Dynamic title
     } catch (error) {
         console.error('Error fetching Elon net worth:', error);
         document.getElementById('elon-net-worth').textContent = elonNetWorth === 343000000000 
             ? 'Failed to load (using fallback: $343B)' 
             : `$${formatNumber(elonNetWorth)} (last known value)`;
+        document.title = `Elon Musk: $${formatNumber(elonNetWorth)} | Net Worth Comparison (Error)`; // Error case
     } finally {
         document.getElementById('elon-net-worth').classList.remove('loading');
     }
