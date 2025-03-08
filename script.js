@@ -44,7 +44,7 @@ document.getElementById('net-worth-form').addEventListener('submit', function(ev
     // Display result
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `
-        <p>Your net worth is $${formatNumber(userNetWorth)}.</p>
+        <p>Your net worth is <b>$${formatNumber(userNetWorth)}</b>.</p>
         <p>Elon Musk's net worth is <b>${formatNumber(comparisonFactor)}</b> times yours.</p>
         <p>To match Elon Musk's net worth, you would need to have earned <b>$${formatNumber(dailyEarningsNeeded)}</b> per day since birth.</p>
     `;
