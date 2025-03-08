@@ -20,10 +20,13 @@ async function updateElonNetWorth() {
         document.getElementById('elon-net-worth').textContent = elonNetWorth === 343000000000 
             ? 'Failed to load (using fallback: $343B)' 
             : `$${formatNumber(elonNetWorth)} (last known value)`;
+    } finally {
+        document.getElementById('elon-net-worth').classList.remove('loading');
     }
 }
 
-// Initial load with loading state
+// Initial load with loading state and spinner
+document.getElementById('elon-net-worth').classList.add('loading');
 document.getElementById('elon-net-worth').textContent = 'Loading...';
 updateElonNetWorth(); // Fetch immediately
 setInterval(updateElonNetWorth, 60000); // Update every minute

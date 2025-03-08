@@ -6,24 +6,25 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
+    color: #ffffff;
 }
 
 .container {
-    background-color: white;
+    background-color: #444444;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     text-align: center;
     width: 400px;
 }
 
 h1 {
-    color: #333;
+    color: #ffffff;
     font-size: 24px;
 }
 
 p {
-    color: #666;
+    color: #dddddd;
     font-size: 16px;
 }
 
@@ -63,5 +64,22 @@ button:hover {
 .result {
     margin-top: 20px;
     font-size: 18px;
-    color: #333;
+    color: #ffffff;
+}
+
+/* Loading spinner for #elon-net-worth */
+#elon-net-worth.loading::before {
+    content: " ";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-right: 5px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
