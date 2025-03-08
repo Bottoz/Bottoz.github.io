@@ -67,7 +67,6 @@ button:hover {
     color: #ffffff;
 }
 
-/* Loading spinner for #elon-net-worth */
 #elon-net-worth.loading::before {
     content: " ";
     display: inline-block;
@@ -82,4 +81,14 @@ button:hover {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+.paypal-button {
+    display: block;
+    margin: 20px auto 0;
+    text-align: center;
+}
+
+.paypal-button img {
+    border: none;
 }
