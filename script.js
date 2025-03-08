@@ -1,25 +1,26 @@
-// Simulated Elon Musk net worth (in dollars) - as of March 08, 2025
-let elonNetWorth = 343000000000; // $343 billion from Forbes estimate
+// Backend proxy endpoint for scraping Forbes Real-Time Billionaires
+const API_URL = 'https://elon-net-worth-scraper.onrender.com/elon-net-worth-forbes'; // Use your Render URL
+
+// Variable to store Elon Musk's net worth
+let elonNetWorth = 343000000000; // Fallback value ($343 billion as of March 08, 2025)
 
 // Function to format numbers with commas and 2 decimal places
 function formatNumber(num) {
     return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Function to update Elon Musk's net worth (simulated real-time update)
-function updateElonNetWorth() {
-    // Placeholder: In a real implementation, fetch from an API like Bloomberg Billionaires Index
-    // Example API call (commented out):
-    // fetch('https://api.example.com/elon-musk-net-worth')
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         elonNetWorth = data.netWorth;
-    //         document.getElementById('elon-net-worth').textContent = `$${formatNumber(elonNetWorth)}`;
-    //     })
-    //     .catch(error => console.error('Error fetching Elon net worth:', error));
-
-    // For now, just display the static value
-    document.getElementById('elon-net-worth').textContent = `$${formatNumber(elonNetWorth)}`;
+// Function to fetch Elon Musk's net worth from the Forbes scraping endpoint
+async function updateElonNetWorth() {
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Forbes scraping API request failed');
+        const data = await response.json();
+        elonNetWorth = data.netWorth || elonNetWorth; // Use scraped value or fallback
+        document.getElementById('elon-net-worth').textContent = `$${formatNumber(elonNetWorth)}`;
+    } catch (error) {
+        console.error('Error fetching Elon net worth:', error);
+        document.getElementById('elon-net-worth').textContent = `$${formatNumber(elonNetWorth)} (Forbes data unavailable, using fallback)`;
+    }
 }
 
 // Function to calculate days alive based on age
@@ -44,12 +45,12 @@ document.getElementById('net-worth-form').addEventListener('submit', function(ev
     // Display result
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `
-        <p>Your net worth is <b>$${formatNumber(userNetWorth)}</b>.</p>
-        <p>Elon Musk's net worth is <b>${formatNumber(comparisonFactor)}</b> times yours.</p>
-        <p>To match Elon Musk's net worth, you would need to have earned <b>$${formatNumber(dailyEarningsNeeded)}</b> per day since birth.</p>
+        <p>Your net worth is $${formatNumber(userNetWorth)}.</p>
+        <p>Elon Musk's net worth is ${formatNumber(comparisonFactor)} times yours.</p>
+        <p>To match Elon Musk's net worth, you would need to have earned $${formatNumber(dailyEarningsNeeded)} per day since birth.</p>
     `;
 });
 
-// Update Elon Musk's net worth on page load and every 60 seconds (simulated)
-updateElonNetWorth();
-setInterval(updateElonNetWorth, 60000); // Update every minute (for demo purposes)
+// Initial fetch and periodic updates
+updateElonNetWorth(); // Fetch on page load
+setInterval(updateElonNetWorth, 60000); // Update every minute
