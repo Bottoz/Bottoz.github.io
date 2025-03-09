@@ -92,3 +92,7 @@ button:hover {
 .paypal-button img {
     border: none;
 }
+
+#elon-net-worth {
+    font-weight: bold;
+}
