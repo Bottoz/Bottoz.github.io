@@ -37,7 +37,7 @@ function calculateDaysAlive(age) {
 
 const netWorthInput = document.getElementById('user-net-worth');
 netWorthInput.addEventListener('input', function() {
-    let value = this.value.replace(/[^0-9.]/g, '');
+    let value = this.value.replace(/[^0-9.]/g, ''); // Remove non-numeric except decimal
     if (value) {
         const parts = value.split('.');
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -47,13 +47,24 @@ netWorthInput.addEventListener('input', function() {
 
 document.getElementById('net-worth-form').addEventListener('submit', function(event) {
     event.preventDefault();
-    const userNetWorth = parseFloat(netWorthInput.value.replace(/,/g, ''));
+    
+    // Get fresh values each submit
+    const rawNetWorth = netWorthInput.value.replace(/,/g, ''); // Remove commas
+    const userNetWorth = parseFloat(rawNetWorth);
     const userAge = parseInt(document.getElementById('user-age').value);
+    
+    // Validate inputs
+    if (isNaN(userNetWorth) || isNaN(userAge)) {
+        console.error('Invalid input:', rawNetWorth, userAge);
+        return;
+    }
+
     const comparisonFactor = elonNetWorth / userNetWorth;
     const daysAlive = calculateDaysAlive(userAge);
     const dailyEarningsNeeded = elonNetWorth / daysAlive;
 
     const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = ''; // Clear previous results
     resultDiv.innerHTML = `
         <p>Your net worth is <span class="bold-number">$${formatNumber(userNetWorth)}</span>.</p>
         <p>Elon Musk's net worth is <span class="bold-number">${formatNumber(comparisonFactor)}</span> times yours.</p>
