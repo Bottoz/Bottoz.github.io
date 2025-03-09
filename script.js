@@ -25,7 +25,6 @@ async function updateElonNetWorth() {
     }
 }
 
-// Initial load with loading state and spinner
 document.getElementById('elon-net-worth').classList.add('loading');
 document.getElementById('elon-net-worth').textContent = 'Loading...';
 updateElonNetWorth();
@@ -36,20 +35,19 @@ function calculateDaysAlive(age) {
     return age * daysInYear;
 }
 
-// Format input with commas as user types
 const netWorthInput = document.getElementById('user-net-worth');
 netWorthInput.addEventListener('input', function() {
-    let value = this.value.replace(/[^0-9.]/g, ''); // Remove non-numeric except decimal
+    let value = this.value.replace(/[^0-9.]/g, '');
     if (value) {
         const parts = value.split('.');
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); // Add commas to integer part
-        this.value = parts.join('.'); // Rejoin with decimal if present
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        this.value = parts.join('.');
     }
 });
 
 document.getElementById('net-worth-form').addEventListener('submit', function(event) {
     event.preventDefault();
-    const userNetWorth = parseFloat(netWorthInput.value.replace(/,/g, '')); // Remove commas for calculation
+    const userNetWorth = parseFloat(netWorthInput.value.replace(/,/g, ''));
     const userAge = parseInt(document.getElementById('user-age').value);
     const comparisonFactor = elonNetWorth / userNetWorth;
     const daysAlive = calculateDaysAlive(userAge);
@@ -57,8 +55,8 @@ document.getElementById('net-worth-form').addEventListener('submit', function(ev
 
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `
-        <p>Your net worth is $${formatNumber(userNetWorth)}.</p>
-        <p>Elon Musk's net worth is ${formatNumber(comparisonFactor)} times yours.</p>
-        <p>To match Elon Musk's net worth, you would need to have earned $${formatNumber(dailyEarningsNeeded)} per day since birth.</p>
+        <p>Your net worth is <span class="bold-number">$${formatNumber(userNetWorth)}</span>.</p>
+        <p>Elon Musk's net worth is <span class="bold-number">${formatNumber(comparisonFactor)}</span> times yours.</p>
+        <p>To match Elon Musk's net worth, you would need to have earned <span class="bold-number">$${formatNumber(dailyEarningsNeeded)}</span> per day since birth.</p>
     `;
 });
