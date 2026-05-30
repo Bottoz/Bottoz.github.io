@@ -11,20 +11,16 @@ jobs:
     permissions:
       contents: write
 
-    # This silences the Node.js 20 warning and prepares for 2026 changes
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch latest Elon net worth
         run: |
+          # More reliable scrape
           NET=$(curl -s "https://www.forbes.com/profile/elon-musk/" | grep -oE '\$[0-9,]+\.[0-9]+B' | head -1 | tr -d '$,B' || echo "834")
           FULL=$((NET * 1000000000))
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
+          
           echo "{\"netWorth\": $FULL, \"lastUpdated\": \"$TIMESTAMP\"}" > elon-net-worth.json
 
       - name: Commit and push
