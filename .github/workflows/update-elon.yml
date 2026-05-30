@@ -9,7 +9,11 @@ jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write     # ← This is the important fix
+      contents: write
+
+    # This silences the Node.js 20 warning and prepares for 2026 changes
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - uses: actions/checkout@v4
