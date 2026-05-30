@@ -9,26 +9,25 @@ function formatNumber(num) {
 async function updateElonNetWorth() {
     const span = document.getElementById('elon-net-worth');
     span.classList.add('loading');
-    span.textContent = 'Loading Elon...';
+    span.textContent = 'Loading Elon’s net worth...';
 
     try {
-        const res = await fetch(JSON_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('File not found');
+        const res = await fetch(JSON_URL + '?nocache=' + Date.now());
         const data = await res.json();
-        elonNetWorth = data.netWorth || 834000000000;
+        
+        elonNetWorth = data.netWorth;
         span.textContent = `$${formatNumber(elonNetWorth)}`;
         document.title = `Elon Musk: $${formatNumber(elonNetWorth)} | Net Worth Comparison`;
-    } catch (e) {
-        console.error("JSON fetch failed:", e);
-        span.textContent = '$834,000,000,000 (approx - click to retry)';
-        span.style.cursor = 'pointer';
-        span.onclick = () => updateElonNetWorth();
+        
+    } catch (err) {
+        console.error(err);
+        span.innerHTML = `Failed to load • <a href="#" onclick="updateElonNetWorth(); return false;">Retry</a>`;
     } finally {
         span.classList.remove('loading');
     }
 }
 
-// ==================== Rest of your code (keeps commas + Compare button working) ====================
+// ==================== Your existing features (commas + Compare) ====================
 const netWorthInput = document.getElementById('user-net-worth');
 netWorthInput.addEventListener('input', function () {
     let val = this.value.replace(/[^0-9.]/g, '');
@@ -41,11 +40,11 @@ netWorthInput.addEventListener('input', function () {
 
 document.getElementById('net-worth-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    const rawValue = netWorthInput.value.replace(/,/g, '');
-    const userNetWorth = parseFloat(rawValue);
+    const raw = netWorthInput.value.replace(/,/g, '');
+    const userNetWorth = parseFloat(raw);
     const userAge = parseInt(document.getElementById('user-age').value || 30);
 
-    if (isNaN(userNetWorth)) return alert("Enter a valid net worth");
+    if (isNaN(userNetWorth)) return alert("Please enter a net worth");
 
     const comparison = elonNetWorth / userNetWorth;
     const daysAlive = userAge * 365.25;
@@ -58,6 +57,6 @@ document.getElementById('net-worth-form').addEventListener('submit', function (e
     `;
 });
 
-// Start everything
+// ==================== START ====================
 updateElonNetWorth();
 setInterval(updateElonNetWorth, 60000);
