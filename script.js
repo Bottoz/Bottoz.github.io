@@ -1,27 +1,28 @@
-// ==================== CONFIG ====================
-const API_URL = 'https://elon-net-worth-scraper.onrender.com/elon-net-worth-forbes';
-let elonNetWorth = 343000000000;   // fallback
+// ==================== INSTANT DATA SOURCE ====================
+const JSON_URL = 'https://raw.githubusercontent.com/bottoz/bottoz.github.io/main/elon-net-worth.json';
+
+let elonNetWorth = 834000000000;   // starting value
 
 function formatNumber(num) {
     return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ==================== UPDATE ELON'S NET WORTH ====================
+// ==================== LOAD ELON'S NET WORTH ====================
 async function updateElonNetWorth() {
-    const elonSpan = document.getElementById('elon-net-worth');
-    elonSpan.classList.add('loading');
-    elonSpan.textContent = 'Loading...';
+    const span = document.getElementById('elon-net-worth');
+    span.classList.add('loading');
+    span.textContent = 'Loading...';
 
     try {
-        const res = await fetch(API_URL);
+        const res = await fetch(JSON_URL + '?t=' + Date.now());
         const data = await res.json();
-        elonNetWorth = data.netWorth || elonNetWorth;
-        elonSpan.textContent = `$${formatNumber(elonNetWorth)}`;
+        elonNetWorth = data.netWorth;
+        span.textContent = `$${formatNumber(elonNetWorth)}`;
+        document.title = `Elon Musk: $${formatNumber(elonNetWorth)} | Net Worth Comparison`;
     } catch (e) {
-        console.error(e);
-        elonSpan.textContent = '$834,000,000,000 (approx)';
+        span.textContent = '$834,000,000,000 (approx)';
     } finally {
-        elonSpan.classList.remove('loading');
+        span.classList.remove('loading');
     }
 }
 
@@ -61,7 +62,7 @@ document.getElementById('net-worth-form').addEventListener('submit', function (e
     `;
 });
 
-// ==================== START EVERYTHING ====================
+// ==================== START THE PAGE ====================
 document.getElementById('elon-net-worth').classList.add('loading');
 document.getElementById('elon-net-worth').textContent = 'Loading...';
 
