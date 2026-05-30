@@ -2,23 +2,28 @@ name: Auto Update Elon Net Worth
 
 on:
   schedule:
-    - cron: '*/30 * * * *'   # Every 30 minutes
-  workflow_dispatch:         # Allows manual run from GitHub
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write     # ← This is the important fix
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch latest Elon net worth from Forbes
+      - name: Fetch latest Elon net worth
         run: |
           NET=$(curl -s "https://www.forbes.com/profile/elon-musk/" | grep -oE '\$[0-9,]+\.[0-9]+B' | head -1 | tr -d '$,B' || echo "834")
           FULL=$((NET * 1000000000))
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
           echo "{\"netWorth\": $FULL, \"lastUpdated\": \"$TIMESTAMP\"}" > elon-net-worth.json
 
-      - name: Commit and push update
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
