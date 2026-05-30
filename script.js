@@ -1,32 +1,34 @@
-// ==================== INSTANT DATA SOURCE ====================
 const JSON_URL = 'https://raw.githubusercontent.com/bottoz/bottoz.github.io/main/elon-net-worth.json';
 
-let elonNetWorth = 834000000000;   // starting value
+let elonNetWorth = 834000000000;
 
 function formatNumber(num) {
     return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ==================== LOAD ELON'S NET WORTH ====================
 async function updateElonNetWorth() {
     const span = document.getElementById('elon-net-worth');
     span.classList.add('loading');
-    span.textContent = 'Loading...';
+    span.textContent = 'Loading Elon...';
 
     try {
         const res = await fetch(JSON_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('File not found');
         const data = await res.json();
-        elonNetWorth = data.netWorth;
+        elonNetWorth = data.netWorth || 834000000000;
         span.textContent = `$${formatNumber(elonNetWorth)}`;
         document.title = `Elon Musk: $${formatNumber(elonNetWorth)} | Net Worth Comparison`;
     } catch (e) {
-        span.textContent = '$834,000,000,000 (approx)';
+        console.error("JSON fetch failed:", e);
+        span.textContent = '$834,000,000,000 (approx - click to retry)';
+        span.style.cursor = 'pointer';
+        span.onclick = () => updateElonNetWorth();
     } finally {
         span.classList.remove('loading');
     }
 }
 
-// ==================== INPUT WITH COMMAS ====================
+// ==================== Rest of your code (keeps commas + Compare button working) ====================
 const netWorthInput = document.getElementById('user-net-worth');
 netWorthInput.addEventListener('input', function () {
     let val = this.value.replace(/[^0-9.]/g, '');
@@ -37,34 +39,25 @@ netWorthInput.addEventListener('input', function () {
     }
 });
 
-// ==================== COMPARE BUTTON ====================
 document.getElementById('net-worth-form').addEventListener('submit', function (e) {
     e.preventDefault();
-
     const rawValue = netWorthInput.value.replace(/,/g, '');
     const userNetWorth = parseFloat(rawValue);
-    const userAge = parseInt(document.getElementById('user-age').value);
+    const userAge = parseInt(document.getElementById('user-age').value || 30);
 
-    if (isNaN(userNetWorth) || isNaN(userAge)) {
-        alert("Please enter valid numbers");
-        return;
-    }
+    if (isNaN(userNetWorth)) return alert("Enter a valid net worth");
 
     const comparison = elonNetWorth / userNetWorth;
     const daysAlive = userAge * 365.25;
     const dailyNeeded = elonNetWorth / daysAlive;
 
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = `
+    document.getElementById('result').innerHTML = `
         <p>Your net worth is <span class="bold-number">$${formatNumber(userNetWorth)}</span>.</p>
         <p>Elon Musk's net worth is <span class="bold-number">${formatNumber(comparison)}</span> times yours.</p>
         <p>To match Elon Musk's net worth, you would need to have earned <span class="bold-number">$${formatNumber(dailyNeeded)}</span> per day since birth.</p>
     `;
 });
 
-// ==================== START THE PAGE ====================
-document.getElementById('elon-net-worth').classList.add('loading');
-document.getElementById('elon-net-worth').textContent = 'Loading...';
-
+// Start everything
 updateElonNetWorth();
-setInterval(updateElonNetWorth, 60000);   // refresh every minute
+setInterval(updateElonNetWorth, 60000);
