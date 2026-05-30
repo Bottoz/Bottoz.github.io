@@ -1,0 +1,33 @@
+name: Auto Update Elon Net Worth
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'     # Every 30 minutes
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch latest value
+        run: |
+          NET=$(curl -s "https://www.forbes.com/profile/elon-musk/" | grep -oE '\$[0-9,]+\.[0-9]+B' | head -1 | tr -d '$,B')
+          if [ -z "$NET" ]; then NET=834; fi
+          FULL=$((NET * 1000000000))
+
+          cat > elon-net-worth.json << EOF
+{
+  "netWorth": $FULL,
+  "lastUpdated": "$(date -u +'%Y-%m-%d %H:%M UTC')"
+}
+EOF
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add elon-net-worth.json
+          git commit -m "Auto-update Elon net worth" || echo "No change"
+          git push
