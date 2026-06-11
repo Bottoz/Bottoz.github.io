@@ -13,49 +13,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Fetch latest Elon net worth
-        shell: bash
         run: |
-          echo "=== Fetching Elon Musk net worth ==="
+          echo "=== Fetching Elon Musk net worth via Forbes RTB List ==="
 
-          PAGE=$(curl -sL \
+          # 1. Fetch from Forbes' direct real-time tracking array endpoint
+          RESPONSE=$(curl -sL \
             -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" \
-            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
-            -H "Accept-Language: en-US,en;q=0.9" \
-            "https://www.forbes.com/profile/elon-musk/")
+            -H "Accept: application/json" \
+            "https://www.forbes.com/forbesapi/person/rtb/0/-estWorthPrev/true.json?fields=uri,finalWorth")
 
-          # Targeted extraction using the known class name
-          NET=$(echo "$PAGE" | grep -o 'profile-header__net-worth[^>]*>[^<]*' | grep -oE '[0-9,]+(\.[0-9]+)?' | tr -d ',' | head -1)
+          # 2. Extract finalWorth for elon-musk using jq filter directly from array
+          RAW_WORTH=$(echo "$RESPONSE" | jq -r '.personList.personsLists[] | select(.uri=="elon-musk") | .finalWorth // empty')
 
-          if [ -z "$NET" ] || ! [[ "$NET" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "⚠️ Extraction failed or invalid value: '$NET'"
-            echo "First 2000 chars of page:"
-            echo "$PAGE" | head -c 2000
-            NET=$(jq -r '.netWorth / 1000000000' elon-net-worth.json 2>/dev/null || echo "782")
-            echo "Using fallback: $${NET}B"
+          # 3. Validation and safe fallback extraction
+          if [ -z "$RAW_WORTH" ] || [ "$RAW_WORTH" = "null" ]; then
+            echo "⚠️ Extraction failed. Checking API response fallback."
+            
+            # Fallback directly to the previously stored json file's value to prevent script failure
+            FULL=$(jq -r '.netWorth' elon-net-worth.json 2>/dev/null || echo "250000000000")
+            echo "Using fallback value: $FULL"
           else
-            echo "✅ Successfully extracted: $${NET}B"
+            # 4. Math calculation: convert Forbes millions scale directly to raw integer
+            FULL=$(awk "BEGIN {printf \"%.0f\", $RAW_WORTH * 1000000}")
+            echo "✅ Extracted Raw Value: $RAW_WORTH million -> Integer Value: $FULL"
           fi
 
-          FULL=$(awk "BEGIN {printf \"%.0f\", $NET * 1000000000}")
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
 
-          # Write JSON using jq
+          # 5. Re-write the clean payload into your local JSON file using jq
           jq -n \
             --argjson netWorth "$FULL" \
             --arg lastUpdated "$TIMESTAMP" \
             '{netWorth: $netWorth, lastUpdated: $lastUpdated}' \
             > elon-net-worth.json
 
-          echo "✅ Updated JSON with $${NET}B at $TIMESTAMP"
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add elon-net-worth.json
-          git commit -m "Auto-update: Elon net worth" || echo "No change"
-          git push
+          echo "✅ Updated file elon-net-worth.json successfully at $TIMESTAMP"
