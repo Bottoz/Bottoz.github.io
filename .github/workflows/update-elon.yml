@@ -49,3 +49,11 @@ jobs:
             > elon-net-worth.json
 
           echo "✅ Updated file elon-net-worth.json successfully at $TIMESTAMP"
+          
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add elon-net-worth.json
+          git commit -m "Auto-update: Elon net worth" || echo "Updated Maybe"
+          git push
