@@ -20,12 +20,27 @@ async function updateElonNetWorth() {
         elonNetWorth = data.netWorth;
         span.textContent = `$${formatNumber(elonNetWorth)}`;
 
-        // Show "Last updated: X minutes ago"
-        const lastTime = new Date(data.lastUpdated);
-        const minutesAgo = Math.floor((Date.now() - lastTime) / 60000);
-        lastSpan.textContent = minutesAgo < 1 
-            ? "Last updated: just now" 
-            : `Last updated: ${minutesAgo} minute${minutesAgo > 1 ? 's' : ''} ago`;
+        // --- NEW TIME FORMATTING LOGIC ---
+        // Replace space/UTC with a standard 'Z' so all browsers parse it cleanly
+        const cleanedTimestamp = data.lastUpdated.replace(' UTC', 'Z').replace(' ', 'T');
+        const lastTime = new Date(cleanedTimestamp);
+        const diffInSeconds = Math.floor((Date.now() - lastTime) / 1000);
+
+        if (diffInSeconds < 60) {
+            lastSpan.textContent = "Last updated: just now";
+        } else {
+            const minutes = Math.floor(diffInSeconds / 60) % 60;
+            const hours = Math.floor(diffInSeconds / 3600) % 24;
+            const days = Math.floor(diffInSeconds / 86400);
+
+            let timeParts = [];
+            if (days > 0) timeParts.push(`${days} day${days > 1 ? 's' : ''}`);
+            if (hours > 0) timeParts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+            if (minutes > 0) timeParts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+
+            lastSpan.textContent = `Last updated: ${timeParts.join(', ')} ago`;
+        }
+        // ---------------------------------
         
         document.title = `Elon Musk: $${formatNumber(elonNetWorth)} | Net Worth Comparison`;
         
