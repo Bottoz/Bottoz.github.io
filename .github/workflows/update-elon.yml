@@ -1,3 +1,18 @@
+name: Auto Update Elon Net Worth
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Fetch latest Elon net worth
         run: |
           echo "=== Fetching Elon Musk net worth ==="
@@ -9,10 +24,10 @@
             -H "Accept-Language: en-US,en;q=0.9" \
             "https://www.forbes.com/profile/elon-musk/")
           
-          # Extract net worth (more robust matching)
+          # Extract net worth
           NET=$(echo "$PAGE" | grep -oE '\$[0-9,]+(\.[0-9]+)?B' | head -1 | tr -d '$,B')
           
-          # Debug output (helpful when it fails)
+          # Debug output if extraction fails
           if [ -z "$NET" ] || ! [[ "$NET" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
             echo "⚠️ Extraction failed or invalid value."
             echo "First 1500 chars of response:"
@@ -21,7 +36,7 @@
             echo "Looking for net worth markers:"
             echo "$PAGE" | grep -iE "net.?worth|profile-header|782|834" | head -5 || true
             
-            # Fallback to previous value
+            # Fallback to previous value from JSON
             NET=$(jq -r '.netWorth / 1000000000' elon-net-worth.json 2>/dev/null || echo "782")
             echo "Using fallback value: $${NET}B"
           else
@@ -33,3 +48,11 @@
           
           printf '{\n "netWorth": %s,\n "lastUpdated": "%s"\n}\n' "$FULL" "$TIMESTAMP" > elon-net-worth.json
           echo "✅ Updated JSON with $${NET}B at $TIMESTAMP"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add elon-net-worth.json
+          git commit -m "Auto-update: Elon net worth updated to $(jq -r '.netWorth' elon-net-worth.json)" || echo "No change"
+          git push
