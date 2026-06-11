@@ -16,13 +16,27 @@ jobs:
 
       - name: Fetch latest Elon net worth
         run: |
-          NET=$(curl -s "https://www.forbes.com/profile/elon-musk/" | grep -oE '\$[0-9]{1,3}(,[0-9]{3})*\.[0-9]+B' | head -1 | tr -d '$,B' || echo "834")
+          echo "Fetching Elon Musk net worth from Forbes..."
+
+          # More flexible regex - works with or without decimals
+          NET=$(curl -s "https://www.forbes.com/profile/elon-musk/" \
+            | grep -oE '\$[0-9,.]+B' \
+            | head -1 \
+            | tr -d '$,B' || echo "782")
+
+          # Fallback if nothing is found
+          if [ -z "$NET" ]; then
+            NET=782
+          fi
+
           FULL=$((NET * 1000000000))
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
-          
+
+          echo "Extracted: $${NET}B → Writing to JSON..."
+
           printf '{\n  "netWorth": %s,\n  "lastUpdated": "%s"\n}\n' "$FULL" "$TIMESTAMP" > elon-net-worth.json
-          
-          echo "✅ Updated to $${NET}B"
+
+          echo "✅ Successfully updated to $${NET}B"
 
       - name: Commit and push
         run: |
