@@ -16,27 +16,29 @@ jobs:
 
       - name: Fetch latest Elon net worth
         run: |
-          echo "Fetching Elon Musk net worth from Forbes..."
+          echo "=== Fetching Elon Musk net worth ==="
 
-          # More flexible regex - works with or without decimals
-          NET=$(curl -s "https://www.forbes.com/profile/elon-musk/" \
-            | grep -oE '\$[0-9,.]+B' \
+          # Improved extraction - more flexible pattern
+          NET=$(curl -sL "https://www.forbes.com/profile/elon-musk/" \
+            | grep -oE '\$[0-9,]+(\.[0-9]+)?B' \
             | head -1 \
-            | tr -d '$,B' || echo "782")
+            | tr -d '$,B' || echo "")
 
-          # Fallback if nothing is found
+          # If nothing found, keep the previous value from the JSON file
           if [ -z "$NET" ]; then
-            NET=782
+            echo "⚠️ Could not extract net worth. Keeping previous value."
+            NET=$(jq -r '.netWorth / 1000000000' elon-net-worth.json 2>/dev/null || echo "782")
           fi
 
           FULL=$((NET * 1000000000))
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
 
-          echo "Extracted: $${NET}B → Writing to JSON..."
+          echo "Extracted value: $${NET}B"
+          echo "Writing to elon-net-worth.json..."
 
           printf '{\n  "netWorth": %s,\n  "lastUpdated": "%s"\n}\n' "$FULL" "$TIMESTAMP" > elon-net-worth.json
 
-          echo "✅ Successfully updated to $${NET}B"
+          echo "✅ Done. New value: $${NET}B"
 
       - name: Commit and push
         run: |
