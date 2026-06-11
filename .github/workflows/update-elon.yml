@@ -14,39 +14,39 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch latest Elon net worth
+        shell: bash
         run: |
           echo "=== Fetching Elon Musk net worth ==="
-          
-          # Use a realistic browser User-Agent (this is the key fix)
+
           PAGE=$(curl -sL \
             -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" \
             -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
             -H "Accept-Language: en-US,en;q=0.9" \
             "https://www.forbes.com/profile/elon-musk/")
-          
-          # Extract net worth
-          NET=$(echo "$PAGE" | grep -oE '\$[0-9,]+(\.[0-9]+)?B' | head -1 | tr -d '$,B')
-          
-          # Debug output if extraction fails
+
+          # Targeted extraction (looks for the specific net worth element)
+          NET=$(echo "$PAGE" | grep -o 'profile-header__net-worth[^>]*>[^<]*' | grep -oE '[0-9,]+(\.[0-9]+)?' | tr -d ',' | head -1)
+
           if [ -z "$NET" ] || ! [[ "$NET" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "⚠️ Extraction failed or invalid value."
-            echo "First 1500 chars of response:"
-            echo "$PAGE" | head -c 1500
-            echo ""
-            echo "Looking for net worth markers:"
-            echo "$PAGE" | grep -iE "net.?worth|profile-header|782|834" | head -5 || true
-            
-            # Fallback to previous value from JSON
+            echo "⚠️ Extraction failed or invalid value: '$NET'"
+            echo "First 2000 chars of page:"
+            echo "$PAGE" | head -c 2000
             NET=$(jq -r '.netWorth / 1000000000' elon-net-worth.json 2>/dev/null || echo "782")
-            echo "Using fallback value: $${NET}B"
+            echo "Using fallback: $${NET}B"
           else
             echo "✅ Successfully extracted: $${NET}B"
           fi
-          
+
           FULL=$(awk "BEGIN {printf \"%.0f\", $NET * 1000000000}")
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
-          
-          printf '{\n "netWorth": %s,\n "lastUpdated": "%s"\n}\n' "$FULL" "$TIMESTAMP" > elon-net-worth.json
+
+          # Write JSON cleanly using jq (avoids heredoc indentation issues)
+          jq -n \
+            --argjson netWorth "$FULL" \
+            --arg lastUpdated "$TIMESTAMP" \
+            '{netWorth: $netWorth, lastUpdated: $lastUpdated}' \
+            > elon-net-worth.json
+
           echo "✅ Updated JSON with $${NET}B at $TIMESTAMP"
 
       - name: Commit and push
@@ -54,5 +54,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add elon-net-worth.json
-          git commit -m "Auto-update: Elon net worth updated to $(jq -r '.netWorth' elon-net-worth.json)" || echo "No change"
+          git commit -m "Auto-update: Elon net worth" || echo "No change"
           git push
