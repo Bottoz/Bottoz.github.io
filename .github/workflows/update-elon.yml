@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Fetch latest Elon net worth
         shell: bash
         run: |
@@ -24,7 +27,7 @@ jobs:
             -H "Accept-Language: en-US,en;q=0.9" \
             "https://www.forbes.com/profile/elon-musk/")
 
-          # Targeted extraction (looks for the specific net worth element)
+          # Targeted extraction using the known class name
           NET=$(echo "$PAGE" | grep -o 'profile-header__net-worth[^>]*>[^<]*' | grep -oE '[0-9,]+(\.[0-9]+)?' | tr -d ',' | head -1)
 
           if [ -z "$NET" ] || ! [[ "$NET" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
@@ -40,7 +43,7 @@ jobs:
           FULL=$(awk "BEGIN {printf \"%.0f\", $NET * 1000000000}")
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
 
-          # Write JSON cleanly using jq (avoids heredoc indentation issues)
+          # Write JSON using jq
           jq -n \
             --argjson netWorth "$FULL" \
             --arg lastUpdated "$TIMESTAMP" \
