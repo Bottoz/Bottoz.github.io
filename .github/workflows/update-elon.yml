@@ -21,24 +21,24 @@ jobs:
           # Download the page
           PAGE=$(curl -sL "https://www.forbes.com/profile/elon-musk/")
 
-          # Extract net worth using a more reliable method
-          NET=$(echo "$PAGE" | grep -oP '\$[0-9,]+(\.[0-9]+)?B' | head -1 | tr -d '$,B')
+          # Try to extract the net worth
+          NET=$(echo "$PAGE" | grep -oE '\$[0-9,]+(\.[0-9]+)?B' | head -1 | tr -d '$,B')
 
-          # Fallback if extraction fails
-          if [ -z "$NET" ]; then
-            echo "⚠️ Could not extract net worth. Using previous value from JSON."
+          # Validate the extracted value
+          if [ -z "$NET" ] || ! [[ "$NET" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "⚠️ Extraction failed or invalid value. Keeping previous net worth."
             NET=$(jq -r '.netWorth / 1000000000' elon-net-worth.json 2>/dev/null || echo "782")
           fi
 
           FULL=$((NET * 1000000000))
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
 
-          echo "Extracted value: $${NET}B"
+          echo "Using value: $${NET}B"
 
-          # Write the JSON file
+          # Write clean JSON
           printf '{\n  "netWorth": %s,\n  "lastUpdated": "%s"\n}\n' "$FULL" "$TIMESTAMP" > elon-net-worth.json
 
-          echo "✅ Successfully updated to $${NET}B"
+          echo "✅ Updated JSON with $${NET}B"
 
       - name: Commit and push
         run: |
