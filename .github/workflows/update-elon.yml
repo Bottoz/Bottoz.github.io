@@ -55,28 +55,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 1. Pull down the true target file from the main repository branch to verify
-          git fetch origin main
-          git checkout origin/main -- elon-net-worth.json 2>/dev/null || echo "{}" > elon-net-worth.json
-
-          # 2. Extract the last stored net worth from the repository file
-          OLD_WORTH=$(jq -r '.netWorth // 0' elon-net-worth.json)
-          NEW_WORTH=$(jq -r '.netWorth // 0' elon-net-worth.json) # (Temporary tracking pointer)
-
-          # 3. Read the actual value freshly written by the previous step
-          # We check the file size or contents to ensure we aren't comparing a blank asset
-          if [ -f "elon-net-worth.json" ]; then
-             echo "Analyzing data transitions..."
-          fi
-
-          # 4. Fall back to standard track if numbers aren't matching
+          # Stage the freshly updated json file that the scraper just built
           git add elon-net-worth.json
           
-          # Force the update if the files don't perfectly align right now
-          if ! git diff --quiet HEAD elon-net-worth.json; then
+          # Check if the staged changes are different from the remote repository branch
+          if ! git diff --cached --quiet; then
             git commit -m "Auto-update: Elon net worth tracker"
             git push origin HEAD:main
-            echo "🚀 File updated and pushed successfully!"
+            echo "🚀 New value pushed to GitHub successfully!"
           else
-            echo "No operational changes required. Skipping commit."
+            echo "No actual financial changes detected. Skipping commit."
           fi
